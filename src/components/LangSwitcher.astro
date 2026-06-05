@@ -13,11 +13,11 @@ const currentPath = Astro.url.pathname;
 let altPath: string;
 
 if (locale === 'en') {
-  // current is EN (/rag-agent/...) → switch to FR (/rag-agent/fr/...)
+  // current is EN (/) → switch to FR (/fr/)
   const withoutBase = currentPath.replace(base.replace(/\/$/, ''), '') || '/';
   altPath = `${base}fr${withoutBase === '/' ? '' : withoutBase}`;
 } else {
-  // current is FR (/rag-agent/fr/...) → switch to EN (/rag-agent/...)
+  // current is FR (/fr/...) → switch to EN (/)
   const withoutBase = currentPath.replace(base.replace(/\/$/, ''), '') || '/';
   const withoutFr = withoutBase.replace(/^\/fr/, '') || '/';
   altPath = `${base}${withoutFr === '/' ? '' : withoutFr.replace(/^\//, '')}`;

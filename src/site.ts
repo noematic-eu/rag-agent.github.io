@@ -2,7 +2,7 @@ export const CONTACT_EMAIL = 'contact@noematic.eu';
 export const GITHUB_AGENT = 'https://github.com/noematic-eu/rag-agent';
 export const GITHUB_ROUTER = 'https://github.com/noematic-eu/rag-router';
 export const SITE_NAME = 'Noematic';
-export const SITE_URL = 'https://noematic-eu.github.io/rag-agent/';
+export const SITE_URL = 'https://rag.noematic.eu/';
 
 /** Live demo agent base URL (empty = demo hidden). Set via PUBLIC_RAG_AGENT_URL at build time. */
 export const RAG_AGENT_URL = (import.meta.env.PUBLIC_RAG_AGENT_URL ?? '')
