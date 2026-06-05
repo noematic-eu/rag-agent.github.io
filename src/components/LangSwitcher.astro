@@ -1,0 +1,47 @@
+---
+import { t, getAlternateLang } from '../i18n/utils';
+
+interface Props {
+  locale?: string;
+}
+const { locale = 'en' } = Astro.props;
+const alt = getAlternateLang(locale);
+const base = import.meta.env.BASE_URL;
+
+// Build alternate URL from current path
+const currentPath = Astro.url.pathname;
+let altPath: string;
+
+if (locale === 'en') {
+  // current is EN (/rag-agent/...) → switch to FR (/rag-agent/fr/...)
+  const withoutBase = currentPath.replace(base.replace(/\/$/, ''), '') || '/';
+  altPath = `${base}fr${withoutBase === '/' ? '' : withoutBase}`;
+} else {
+  // current is FR (/rag-agent/fr/...) → switch to EN (/rag-agent/...)
+  const withoutBase = currentPath.replace(base.replace(/\/$/, ''), '') || '/';
+  const withoutFr = withoutBase.replace(/^\/fr/, '') || '/';
+  altPath = `${base}${withoutFr === '/' ? '' : withoutFr.replace(/^\//, '')}`;
+}
+---
+
+<a href={altPath} class="lang-btn" lang={alt}>
+  {t(locale, 'nav_lang_switch')}
+</a>
+
+<style>
+  .lang-btn {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 0.25rem 0.6rem;
+    text-decoration: none;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .lang-btn:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    text-decoration: none;
+  }
+</style>

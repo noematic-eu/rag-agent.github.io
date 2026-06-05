@@ -1,0 +1,93 @@
+---
+import { t } from '../i18n/utils';
+import { GITHUB_AGENT, GITHUB_ROUTER } from '../site';
+
+interface Props {
+  locale?: string;
+}
+const { locale = 'en' } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const prefix = locale === 'fr' ? `${base}fr/` : base;
+---
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <span class="footer-logo">Noematic</span>
+      <p class="footer-tagline">{t(locale, 'footer_privacy')}</p>
+    </div>
+    <nav class="footer-nav" aria-label="Footer">
+      <div class="footer-col">
+        <span class="footer-col-label">Products</span>
+        <a href={`${prefix}products/rag-agent`}>{t(locale, 'nav_rag_agent')}</a>
+        <a href={`${prefix}products/rag-router`}>{t(locale, 'nav_rag_router')}</a>
+        <a href={`${prefix}pricing`}>{t(locale, 'nav_pricing')}</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-label">Open source</span>
+        <a href={GITHUB_AGENT} target="_blank" rel="noopener">rag-agent ↗</a>
+        <a href={GITHUB_ROUTER} target="_blank" rel="noopener">rag-router ↗</a>
+      </div>
+      <div class="footer-col">
+        <span class="footer-col-label">Company</span>
+        <a href={`${prefix}contact`}>{t(locale, 'nav_contact')}</a>
+      </div>
+    </nav>
+  </div>
+  <div class="container footer-bottom">
+    <span>{t(locale, 'footer_copy')}</span>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+    padding-top: 3rem;
+  }
+  .footer-inner {
+    display: flex;
+    gap: 4rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding-bottom: 2rem;
+  }
+  .footer-brand { flex: 1; min-width: 180px; }
+  .footer-logo { font-weight: 700; font-size: 1rem; color: var(--color-text); }
+  .footer-tagline {
+    font-size: 0.85rem;
+    color: var(--color-muted);
+    margin-top: 0.4rem;
+    max-width: 28ch;
+  }
+  .footer-nav {
+    display: flex;
+    gap: 3rem;
+    flex-wrap: wrap;
+  }
+  .footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .footer-col-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    margin-bottom: 0.25rem;
+  }
+  .footer-col a {
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+  .footer-col a:hover { color: var(--color-accent); text-decoration: none; }
+  .footer-bottom {
+    border-top: 1px solid var(--color-border);
+    padding-block: 1rem;
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+</style>

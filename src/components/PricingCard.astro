@@ -1,0 +1,112 @@
+---
+interface Props {
+  name: string;
+  price: string;
+  note: string;
+  features: string[];
+  cta: string;
+  ctaHref: string;
+  featured?: boolean;
+  badge?: string;
+  ctaExternal?: boolean;
+  ctaLemonSqueezyEmbed?: boolean;
+  secondaryCta?: string;
+  secondaryCtaHref?: string;
+  id?: string;
+}
+const {
+  name,
+  price,
+  note,
+  features,
+  cta,
+  ctaHref,
+  featured = false,
+  badge,
+  ctaExternal = false,
+  ctaLemonSqueezyEmbed = false,
+  secondaryCta,
+  secondaryCtaHref,
+  id,
+} = Astro.props;
+---
+
+<div class:list={['card', 'pricing-card', { featured }]} id={id}>
+  {badge && <span class="pill pricing-badge">{badge}</span>}
+  <div class="pricing-header">
+    <span class="pricing-name">{name}</span>
+    <span class="pricing-price">{price}</span>
+    <span class="pricing-note">{note}</span>
+  </div>
+  <hr />
+  <ul class="feature-list">
+    {features.map((f) => <li>{f}</li>)}
+  </ul>
+  <div class="pricing-actions">
+    <a
+      href={ctaHref}
+      class:list={[
+        'btn',
+        featured ? 'btn-primary' : 'btn-outline',
+        'pricing-cta',
+        { 'lemonsqueezy-button': ctaLemonSqueezyEmbed },
+      ]}
+      {...(ctaExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+    >
+      {cta}
+    </a>
+    {secondaryCta && secondaryCtaHref && (
+      <a
+        href={secondaryCtaHref}
+        class="btn btn-outline pricing-cta-secondary"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {secondaryCta}
+      </a>
+    )}
+  </div>
+</div>
+
+<style>
+  .pricing-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .pricing-card.featured {
+    border-color: var(--color-accent);
+    background: var(--color-accent-light);
+  }
+  .pricing-badge { align-self: flex-start; }
+  .pricing-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .pricing-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .pricing-price {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.15;
+  }
+  .pricing-note {
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+  .pricing-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    margin-top: auto;
+  }
+  .pricing-cta { justify-content: center; }
+  .pricing-cta-secondary { justify-content: center; font-size: 0.875rem; }
+</style>

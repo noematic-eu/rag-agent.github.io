@@ -1,0 +1,176 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LemonSqueezyOverlay from '../components/LemonSqueezyOverlay.astro';
+import PricingCard from '../components/PricingCard.astro';
+import PricingFAQ from '../components/PricingFAQ.astro';
+import { t } from '../i18n/utils';
+import {
+  GITHUB_AGENT,
+  CONTACT_EMAIL,
+  CHECKOUT_SUPPORTER_URL,
+  CHECKOUT_DONATION_URL,
+  CHECKOUT_DONATION_PAYPAL_URL,
+  isLemonSqueezyCheckout,
+  lemonSqueezyEmbedHref,
+} from '../site';
+
+const locale = 'en';
+const base = import.meta.env.BASE_URL;
+const contact = `${base}contact`;
+const contactMail = `mailto:${CONTACT_EMAIL}`;
+
+function checkoutHref(url: string, fallback: string) {
+  return url || fallback;
+}
+
+const supporterHref = checkoutHref(CHECKOUT_SUPPORTER_URL, contactMail);
+const supporterExternal = Boolean(CHECKOUT_SUPPORTER_URL);
+const supporterCta = supporterExternal
+  ? t(locale, 'pricing_tier_supporter_cta')
+  : t(locale, 'pricing_cta_contact');
+
+const donationUsesEmbed = isLemonSqueezyCheckout(CHECKOUT_DONATION_URL);
+const donationHref = donationUsesEmbed
+  ? lemonSqueezyEmbedHref(CHECKOUT_DONATION_URL)
+  : checkoutHref(CHECKOUT_DONATION_URL, contactMail);
+const donationExternal = Boolean(CHECKOUT_DONATION_URL) && !donationUsesEmbed;
+const donationCta = CHECKOUT_DONATION_URL
+  ? t(locale, 'pricing_tier_donation_cta')
+  : t(locale, 'pricing_cta_contact');
+---
+
+<BaseLayout locale={locale} title={t(locale, 'pricing_title')}>
+  <section class="page-hero pricing-hero">
+    <div class="container">
+      <h1>{t(locale, 'pricing_title')}</h1>
+      <p class="page-intro">{t(locale, 'pricing_subtitle')}</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <p class="section-label">{t(locale, 'pricing_section_individual')}</p>
+      <div class="pricing-grid">
+        <PricingCard
+          name={t(locale, 'pricing_tier_selfhosted_name')}
+          price={t(locale, 'pricing_tier_selfhosted_price')}
+          note={t(locale, 'pricing_tier_selfhosted_note')}
+          features={[
+            t(locale, 'pricing_tier_selfhosted_f1'),
+            t(locale, 'pricing_tier_selfhosted_f2'),
+            t(locale, 'pricing_tier_selfhosted_f3'),
+            t(locale, 'pricing_tier_selfhosted_f4'),
+          ]}
+          cta={t(locale, 'pricing_tier_selfhosted_cta')}
+          ctaHref={GITHUB_AGENT}
+          ctaExternal={true}
+        />
+        <PricingCard
+          id="supporter"
+          name={t(locale, 'pricing_tier_supporter_name')}
+          price={t(locale, 'pricing_tier_supporter_price')}
+          note={t(locale, 'pricing_tier_supporter_note')}
+          features={[
+            t(locale, 'pricing_tier_supporter_f1'),
+            t(locale, 'pricing_tier_supporter_f2'),
+            t(locale, 'pricing_tier_supporter_f3'),
+            t(locale, 'pricing_tier_supporter_f4'),
+          ]}
+          cta={supporterCta}
+          ctaHref={supporterHref}
+          ctaExternal={supporterExternal}
+          featured={true}
+          badge={t(locale, 'pricing_badge_popular')}
+        />
+        <PricingCard
+          name={t(locale, 'pricing_tier_donation_name')}
+          price={t(locale, 'pricing_tier_donation_price')}
+          note={t(locale, 'pricing_tier_donation_note')}
+          features={[
+            t(locale, 'pricing_tier_donation_f1'),
+            t(locale, 'pricing_tier_donation_f2'),
+            t(locale, 'pricing_tier_donation_f3'),
+          ]}
+          cta={donationCta}
+          ctaHref={donationHref}
+          ctaExternal={donationExternal}
+          ctaLemonSqueezyEmbed={donationUsesEmbed}
+          secondaryCta={CHECKOUT_DONATION_PAYPAL_URL ? t(locale, 'pricing_tier_donation_cta_paypal') : undefined}
+          secondaryCtaHref={CHECKOUT_DONATION_PAYPAL_URL || undefined}
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="services-section">
+    <div class="container">
+      <p class="section-label">{t(locale, 'pricing_section_services')}</p>
+      <div class="pricing-grid">
+        <PricingCard
+          name={t(locale, 'pricing_tier_pilot_name')}
+          price={t(locale, 'pricing_tier_pilot_price')}
+          note={t(locale, 'pricing_tier_pilot_note')}
+          features={[
+            t(locale, 'pricing_tier_pilot_f1'),
+            t(locale, 'pricing_tier_pilot_f2'),
+            t(locale, 'pricing_tier_pilot_f3'),
+            t(locale, 'pricing_tier_pilot_f4'),
+            t(locale, 'pricing_tier_pilot_f5'),
+            t(locale, 'pricing_tier_pilot_f6'),
+          ]}
+          cta={t(locale, 'pricing_tier_pilot_cta')}
+          ctaHref={contact}
+          featured={true}
+          badge={t(locale, 'pricing_badge_recommended')}
+        />
+        <PricingCard
+          name={t(locale, 'pricing_tier_multishelf_name')}
+          price={t(locale, 'pricing_tier_multishelf_price')}
+          note={t(locale, 'pricing_tier_multishelf_note')}
+          features={[
+            t(locale, 'pricing_tier_multishelf_f1'),
+            t(locale, 'pricing_tier_multishelf_f2'),
+            t(locale, 'pricing_tier_multishelf_f3'),
+            t(locale, 'pricing_tier_multishelf_f4'),
+            t(locale, 'pricing_tier_multishelf_f5'),
+          ]}
+          cta={t(locale, 'pricing_tier_multishelf_cta')}
+          ctaHref={contact}
+        />
+        <PricingCard
+          name={t(locale, 'pricing_tier_enterprise_name')}
+          price={t(locale, 'pricing_tier_enterprise_price')}
+          note={t(locale, 'pricing_tier_enterprise_note')}
+          features={[
+            t(locale, 'pricing_tier_enterprise_f1'),
+            t(locale, 'pricing_tier_enterprise_f2'),
+            t(locale, 'pricing_tier_enterprise_f3'),
+            t(locale, 'pricing_tier_enterprise_f4'),
+          ]}
+          cta={t(locale, 'pricing_tier_enterprise_cta')}
+          ctaHref={contact}
+        />
+      </div>
+    </div>
+  </section>
+
+  <PricingFAQ locale={locale} />
+  {donationUsesEmbed && <LemonSqueezyOverlay />}
+</BaseLayout>
+
+<style>
+  .pricing-hero { padding-block: 80px 64px; border-bottom: 1px solid var(--color-border); }
+  .pricing-hero .container { max-width: 680px; display: flex; flex-direction: column; gap: 1rem; }
+  .page-intro { font-size: 1.0625rem; max-width: 52ch; }
+  .services-section {
+    border-top: 1px solid var(--color-border);
+    padding-block: 64px;
+  }
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    align-items: start;
+    margin-top: 1.5rem;
+  }
+</style>

@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import FeatureList from '../../../components/FeatureList.astro';
+import ArchitectureDiagram from '../../../components/ArchitectureDiagram.astro';
+import { t } from '../../../i18n/utils';
+
+const locale = 'fr';
+const base = import.meta.env.BASE_URL;
+const prefix = `${base}fr/`;
+
+const features = [
+  t(locale, 'router_f1'), t(locale, 'router_f2'), t(locale, 'router_f3'),
+  t(locale, 'router_f4'), t(locale, 'router_f5'), t(locale, 'router_f6'),
+];
+---
+
+<BaseLayout locale={locale} title={t(locale, 'router_title')} description={t(locale, 'router_intro')}>
+  <section class="page-hero">
+    <div class="container">
+      <span class="pill">Orchestration</span>
+      <h1>{t(locale, 'router_title')}</h1>
+      <p class="page-tagline">{t(locale, 'router_tagline')}</p>
+      <p class="page-intro">{t(locale, 'router_intro')}</p>
+      <div class="page-hero-actions">
+        <a href={`${prefix}contact`} class="btn btn-primary">{t(locale, 'router_cta')}</a>
+        <a href={`${prefix}products/rag-agent`} class="btn btn-outline">{t(locale, 'nav_rag_agent')}</a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container two-col">
+      <div>
+        <p class="section-label">{t(locale, 'router_features_title')}</p>
+        <FeatureList items={features} />
+      </div>
+      <div>
+        <p class="section-label">{t(locale, 'router_arch_title')}</p>
+        <ArchitectureDiagram caption={t(locale, 'router_arch_caption')} />
+      </div>
+    </div>
+  </section>
+
+  <section class="alt-bg">
+    <div class="container" style="max-width:680px">
+      <p class="section-label">{t(locale, 'router_rel_title')}</p>
+      <p style="font-size:1.0625rem; max-width:60ch; margin-top:0.75rem">{t(locale, 'router_rel_body')}</p>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="container cta-band-inner">
+      <div>
+        <h2>{t(locale, 'pricing_tier_multishelf_name')}</h2>
+        <p>{t(locale, 'pricing_tier_multishelf_note')}</p>
+      </div>
+      <a href={`${prefix}contact`} class="btn btn-primary">{t(locale, 'router_cta')}</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero { padding-block: 80px 64px; border-bottom: 1px solid var(--color-border); }
+  .page-hero .container { display: flex; flex-direction: column; gap: 1rem; max-width: 680px; }
+  .page-hero h1 { margin-top: 0.25rem; }
+  .page-tagline { font-size: 1rem; color: var(--color-accent); font-weight: 600; }
+  .page-intro { font-size: 1.0625rem; max-width: 56ch; }
+  .page-hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.25rem; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+  .alt-bg { background: var(--color-surface); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+  .cta-band { border-top: 1px solid var(--color-border); background: var(--color-surface); padding-block: 64px; }
+  .cta-band-inner { display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
+  .cta-band h2 { font-size: 1.5rem; }
+  .cta-band p { color: var(--color-muted); font-size: 0.9375rem; margin-top: 0.25rem; }
+  @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; gap: 2.5rem; } }
+</style>

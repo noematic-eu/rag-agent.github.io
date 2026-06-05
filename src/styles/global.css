@@ -1,0 +1,176 @@
+/* ---- Variables ---- */
+:root {
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-border: #e5e7eb;
+  --color-text: #111111;
+  --color-muted: #64748b;
+  --color-accent: #0f766e;
+  --color-accent-hover: #0d5c56;
+  --color-accent-light: #f0fdf9;
+  --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --max-w: 960px;
+  --section-gap: 96px;
+  --section-pad-top: 64px;
+  --radius: 6px;
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: var(--color-accent); text-decoration: none; }
+a:hover { color: var(--color-accent-hover); text-decoration: underline; }
+
+/* ---- Typography ---- */
+h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 600; line-height: 1.25; letter-spacing: -0.015em; }
+h3 { font-size: 1.125rem; font-weight: 600; line-height: 1.4; }
+p  { font-size: 1rem; color: var(--color-muted); max-width: 60ch; }
+
+/* ---- Layout ---- */
+.container {
+  width: 100%;
+  max-width: var(--max-w);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+section { padding-block: var(--section-gap); }
+/* Collapse double gap between back-to-back content sections */
+section + section { padding-top: 0; }
+/* Restore space below hero/page dividers and above bordered blocks */
+.hero + section,
+.page-hero + section,
+.pricing-hero + section,
+section.alt-bg,
+section.demo-section,
+section.services-section,
+section.cta-band,
+section.pricing-faq,
+section.pillars {
+  padding-top: var(--section-pad-top);
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.65rem 1.4rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  text-decoration: none;
+  border: 1.5px solid transparent;
+}
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+.btn-primary:hover { background: var(--color-accent-hover); border-color: var(--color-accent-hover); color: #fff; text-decoration: none; }
+.btn-outline {
+  background: transparent;
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+.btn-outline:hover { border-color: var(--color-accent); color: var(--color-accent); text-decoration: none; }
+
+/* ---- Cards ---- */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+}
+
+/* ---- Pill badge ---- */
+.pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  padding: 0.2em 0.7em;
+  border-radius: 99px;
+}
+
+/* ---- Feature list ---- */
+.feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.feature-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+}
+.feature-list li::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  margin-top: 0.55em;
+}
+
+/* ---- Grid helpers ---- */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+
+/* ---- Section label ---- */
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+.section-intro {
+  max-width: 52ch;
+  font-size: 1.0625rem;
+  color: var(--color-muted);
+  margin-top: 0.75rem;
+}
+
+/* ---- Divider ---- */
+hr { border: none; border-top: 1px solid var(--color-border); }
+
+/* ---- Architecture pre block ---- */
+.arch-block {
+  background: #111;
+  color: #e2e8f0;
+  border-radius: var(--radius);
+  padding: 1.5rem 2rem;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  :root { --section-gap: 64px; --section-pad-top: 48px; }
+  h1 { font-size: 1.875rem; }
+}

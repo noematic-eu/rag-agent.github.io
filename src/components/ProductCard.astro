@@ -1,0 +1,44 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  cta: string;
+  href: string;
+  badge?: string;
+}
+const { title, description, cta, href, badge } = Astro.props;
+---
+
+<div class="card product-card">
+  {badge && <span class="pill">{badge}</span>}
+  <h3>{title}</h3>
+  <p>{description}</p>
+  <a href={href} class="product-cta">
+    {cta}
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </a>
+</div>
+
+<style>
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .product-card h3 { font-size: 1.125rem; color: var(--color-text); }
+  .product-card p { font-size: 0.9375rem; flex: 1; }
+  .product-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    text-decoration: none;
+    margin-top: 0.25rem;
+    transition: gap 0.15s;
+  }
+  .product-cta:hover { gap: 0.6em; text-decoration: none; }
+</style>

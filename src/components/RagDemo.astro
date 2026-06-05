@@ -1,0 +1,580 @@
+---
+import { RAG_AGENT_URL } from '../site';
+import { DEMO_CORPORA, DEMO_SUGGESTIONS, defaultCorpus } from '../config/demo';
+import { t } from '../i18n/utils';
+
+interface Props {
+  locale: string;
+}
+
+const { locale } = Astro.props;
+const agentUrl = RAG_AGENT_URL;
+const defaultCorp = defaultCorpus(locale);
+
+const i18n = {
+  ask: t(locale, 'demo_ask'),
+  questionPlaceholder: t(locale, 'demo_question_placeholder'),
+  evidence: t(locale, 'demo_evidence'),
+  answer: t(locale, 'demo_answer'),
+  loadingEvidence: t(locale, 'demo_loading_evidence'),
+  loadingAnswer: t(locale, 'demo_loading_answer'),
+  noResults: t(locale, 'demo_no_results'),
+  error: t(locale, 'demo_error'),
+  poweredBy: t(locale, 'demo_powered_by'),
+  statsLink: t(locale, 'demo_stats_link'),
+  score: t(locale, 'demo_score'),
+};
+---
+
+{agentUrl && (
+  <section class="demo-section" id="live-demo">
+    <div class="container">
+      <h2 class="demo-heading">{t(locale, 'demo_title')}</h2>
+      <p class="demo-sub">{t(locale, 'demo_subtitle')}</p>
+
+      <div class="rag-demo" id="rag-demo-root">
+        <div class="demo-controls">
+          <div class="demo-corpus" role="group" aria-label={t(locale, 'demo_corpus_label')}>
+            {DEMO_CORPORA.map((c) => (
+              <button
+                type="button"
+                class:list={['corpus-btn', { active: c.id === defaultCorp }]}
+                data-corpus={c.id}
+              >
+                {locale === 'fr' ? c.labelFr : c.labelEn}
+              </button>
+            ))}
+          </div>
+
+          <div class="demo-query-row">
+            <input
+              type="text"
+              class="demo-input"
+              id="demo-question"
+              placeholder={t(locale, 'demo_question_placeholder')}
+              autocomplete="off"
+            />
+            <button type="button" class="btn btn-primary" id="demo-ask">
+              {t(locale, 'demo_ask')}
+            </button>
+          </div>
+
+          <div class="demo-suggestions" id="demo-suggestions" />
+
+          <div class="demo-topk-row">
+            <label class="demo-topk-label" for="demo-top-k">{t(locale, 'demo_top_k')}</label>
+            <select class="demo-topk-select" id="demo-top-k" aria-label={t(locale, 'demo_top_k')}>
+              <option value="4">4</option>
+              <option value="6" selected>6</option>
+              <option value="8">8</option>
+              <option value="10">10</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="demo-panels">
+          <div class="demo-panel">
+            <h3 class="panel-title">{t(locale, 'demo_evidence')}</h3>
+            <p class="panel-hint">{t(locale, 'demo_evidence_hint')}</p>
+            <div class="panel-body" id="demo-evidence">
+              <p class="panel-empty">{t(locale, 'demo_evidence_empty')}</p>
+            </div>
+          </div>
+          <div class="demo-panel">
+            <h3 class="panel-title">{t(locale, 'demo_answer')}</h3>
+            <p class="panel-hint">{t(locale, 'demo_answer_hint')}</p>
+            <div class="panel-body answer-body" id="demo-answer">
+              <p class="panel-empty">{t(locale, 'demo_answer_empty')}</p>
+            </div>
+          </div>
+        </div>
+
+        <footer class="demo-footer">
+          <span>{t(locale, 'demo_powered_by')}</span>
+          <a href={`${agentUrl}/stats`} target="_blank" rel="noopener noreferrer">
+            {t(locale, 'demo_stats_link')}
+          </a>
+        </footer>
+      </div>
+    </div>
+  </section>
+)}
+
+<script
+  define:vars={{
+    agentUrl,
+    locale,
+    defaultCorp,
+    suggestions: DEMO_SUGGESTIONS,
+    i18n,
+  }}
+>
+  const root = document.getElementById('rag-demo-root');
+  if (!root || !agentUrl) {
+    // Demo not configured
+  } else {
+    let activeCorpus = defaultCorp;
+    let eventSource = null;
+    let busy = false;
+
+    const questionInput = document.getElementById('demo-question');
+    const askBtn = document.getElementById('demo-ask');
+    const evidenceEl = document.getElementById('demo-evidence');
+    const answerEl = document.getElementById('demo-answer');
+    const suggestionsEl = document.getElementById('demo-suggestions');
+    const topKSelect = document.getElementById('demo-top-k');
+    const corpusBtns = root.querySelectorAll('.corpus-btn');
+
+    function currentTopK() {
+      const n = parseInt(topKSelect?.value ?? '6', 10);
+      return Number.isFinite(n) && n > 0 ? n : 6;
+    }
+
+    function langKey() {
+      return locale === 'fr' ? 'fr' : 'en';
+    }
+
+    const retrievalStopwords = new Set([
+      'comment', 'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'ou', 'en', 'sur',
+      'est', 'sont', 'que', 'qui', 'dans', 'pour', 'par', 'au', 'aux', 'ce', 'cette', 'ces',
+      'son', 'sa', 'ses', 'leur', 'leurs', 'the', 'a', 'an', 'and', 'or', 'of', 'to', 'in',
+      'for', 'with', 'how', 'what', 'when', 'where', 'why', 'does', 'do', 'is', 'are', 'une',
+      'prend', 'limite', 'organisation', 'comment',
+    ]);
+
+    function deriveRetrievalQuery(q) {
+      const normalized = q
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{M}/gu, '')
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ');
+      const words = normalized.split(/\s+/).filter((w) => w.length > 2 && !retrievalStopwords.has(w));
+      const articleRefs = [...q.matchAll(/article\s+(premier|\d+)/gi)].map((m) => `article ${m[1]}`);
+      const merged = [...new Set([...articleRefs, ...words])];
+      if (merged.length === 0) return q;
+      return merged.slice(0, 14).join(' ');
+    }
+
+    function renderSuggestions() {
+      const items = suggestions[activeCorpus]?.[langKey()] ?? [];
+      suggestionsEl.innerHTML = '';
+      for (const item of items) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'suggestion-chip';
+        btn.textContent = item.label;
+        btn.addEventListener('click', () => {
+          questionInput.value = item.q;
+          runQuery(item.rq, item.q);
+        });
+        suggestionsEl.appendChild(btn);
+      }
+    }
+
+    corpusBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeCorpus = btn.dataset.corpus;
+        corpusBtns.forEach((b) => b.classList.toggle('active', b === btn));
+        renderSuggestions();
+      });
+    });
+
+    function setBusy(state) {
+      busy = state;
+      askBtn.disabled = state;
+      questionInput.disabled = state;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function renderEvidence(hits) {
+      if (!hits || hits.length === 0) {
+        evidenceEl.innerHTML = `<p class="panel-empty">${escapeHtml(i18n.noResults)}</p>`;
+        return;
+      }
+      evidenceEl.innerHTML = hits
+        .map(
+          (hit, i) => `
+        <article class="evidence-card" data-rank="${i + 1}">
+          <header class="evidence-meta">
+            <span class="evidence-rank">[${i + 1}]</span>
+            <span class="evidence-score">${escapeHtml(i18n.score)} ${hit.score?.toFixed(3) ?? '—'}</span>
+          </header>
+          <p class="evidence-section">${escapeHtml(hit.section_path || hit.section || hit.doc_title || hit.doc_id || '')}</p>
+          <p class="evidence-excerpt">${escapeHtml(hit.excerpt || '')}</p>
+        </article>`,
+        )
+        .join('');
+    }
+
+    function highlightCitations(answerText) {
+      const cards = evidenceEl.querySelectorAll('.evidence-card');
+      cards.forEach((c) => c.classList.remove('highlight'));
+      const refs = answerText.match(/\[(\d+)\]/g) || [];
+      for (const ref of refs) {
+        const n = parseInt(ref.slice(1, -1), 10);
+        const card = evidenceEl.querySelector(`[data-rank="${n}"]`);
+        if (card) card.classList.add('highlight');
+      }
+    }
+
+    function renderAnswer(text, streaming) {
+      if (!text) {
+        answerEl.innerHTML = `<p class="panel-empty">${streaming ? escapeHtml(i18n.loadingAnswer) : ''}</p>`;
+        return;
+      }
+      answerEl.innerHTML = `<div class="answer-text">${escapeHtml(text)}</div>`;
+      highlightCitations(text);
+    }
+
+    function closeStream() {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+    }
+
+    async function fetchEvidence(rq, q) {
+      evidenceEl.innerHTML = `<p class="panel-loading">${escapeHtml(i18n.loadingEvidence)}</p>`;
+      const topK = String(currentTopK());
+      const params = new URLSearchParams({
+        corpus: activeCorpus,
+        rq,
+        q,
+        top_k: topK,
+        max_per_doc: topK,
+        include_text: '1',
+      });
+      const res = await fetch(`${agentUrl}/retrieve?${params}`);
+      if (!res.ok) {
+        throw new Error(`${res.status} ${res.statusText}`);
+      }
+      const data = await res.json();
+      if (data.status === 'no_results') {
+        renderEvidence([]);
+        return false;
+      }
+      renderEvidence(data.hits || []);
+      return (data.hits || []).length > 0;
+    }
+
+    function streamAnswer(rq, q) {
+      return new Promise((resolve, reject) => {
+        closeStream();
+        renderAnswer('', true);
+
+        const topK = String(currentTopK());
+        const params = new URLSearchParams({
+          corpus: activeCorpus,
+          rq,
+          q,
+          top_k: topK,
+          max_per_doc: topK,
+          lang: locale === 'fr' ? 'fr' : 'en',
+        });
+        let answer = '';
+
+        eventSource = new EventSource(`${agentUrl}/search?${params}`);
+
+        eventSource.addEventListener('message', (e) => {
+          try {
+            const token = JSON.parse(e.data);
+            answer += typeof token === 'string' ? token : String(token);
+            renderAnswer(answer, true);
+          } catch {
+            answer += e.data;
+            renderAnswer(answer, true);
+          }
+        });
+
+        eventSource.addEventListener('complete', (e) => {
+          try {
+            const payload = JSON.parse(e.data);
+            if (payload.response) {
+              answer = payload.response;
+            }
+          } catch {
+            /* keep streamed answer */
+          }
+          renderAnswer(answer, false);
+          closeStream();
+          resolve(answer);
+        });
+
+        eventSource.addEventListener('error', (e) => {
+          if (e.data) {
+            try {
+              const err = JSON.parse(e.data);
+              reject(new Error(err.error || err.message || i18n.error));
+            } catch {
+              reject(new Error(e.data));
+            }
+          } else if (answer) {
+            renderAnswer(answer, false);
+            closeStream();
+            resolve(answer);
+          } else {
+            closeStream();
+            reject(new Error(i18n.error));
+          }
+        });
+
+        eventSource.onerror = () => {
+          if (!answer) {
+            closeStream();
+            reject(new Error(i18n.error));
+          }
+        };
+      });
+    }
+
+    async function runQuery(rq, q) {
+      if (busy) return;
+      setBusy(true);
+      closeStream();
+      answerEl.innerHTML = `<p class="panel-loading">${escapeHtml(i18n.loadingAnswer)}</p>`;
+
+      try {
+        const hasHits = await fetchEvidence(rq, q);
+        if (!hasHits) {
+          answerEl.innerHTML = `<p class="panel-empty">${escapeHtml(i18n.noResults)}</p>`;
+          return;
+        }
+        await streamAnswer(rq, q);
+      } catch (err) {
+        evidenceEl.innerHTML = `<p class="panel-error">${escapeHtml(i18n.error)}: ${escapeHtml(err.message || String(err))}</p>`;
+        answerEl.innerHTML = `<p class="panel-error">${escapeHtml(i18n.error)}</p>`;
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    askBtn.addEventListener('click', () => {
+      const q = questionInput.value.trim();
+      if (!q) return;
+      runQuery(deriveRetrievalQuery(q), q);
+    });
+
+    questionInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        askBtn.click();
+      }
+    });
+
+    renderSuggestions();
+  }
+</script>
+
+<style>
+  .demo-section {
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+    padding-block: 64px;
+  }
+  .demo-heading {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  .demo-sub {
+    font-size: 0.9375rem;
+    color: var(--color-muted);
+    margin-bottom: 1.5rem;
+    max-width: 56ch;
+  }
+  .rag-demo {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .demo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .demo-corpus {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .corpus-btn {
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--color-muted);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .corpus-btn:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+  }
+  .corpus-btn.active {
+    border-color: var(--color-accent);
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+  }
+  .demo-topk-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .demo-topk-label {
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+    font-weight: 500;
+  }
+  .demo-topk-select {
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg);
+    font-size: 0.8125rem;
+    color: var(--color-text);
+  }
+  .demo-query-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .demo-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.65rem 0.85rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius);
+    font-size: 0.9375rem;
+    font-family: inherit;
+  }
+  .demo-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+  .demo-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  :global(.suggestion-chip) {
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: var(--color-muted);
+  }
+  :global(.suggestion-chip:hover) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  .demo-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+  .demo-panel {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.75rem 1rem 0;
+    margin: 0;
+  }
+  .panel-hint {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    padding: 0.25rem 1rem 0.5rem;
+    margin: 0;
+  }
+  .panel-body {
+    flex: 1;
+    padding: 0 1rem 1rem;
+    overflow-y: auto;
+    max-height: 360px;
+  }
+  .panel-empty,
+  .panel-loading {
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+  .panel-error {
+    font-size: 0.8125rem;
+    color: #b91c1c;
+  }
+  :global(.evidence-card) {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.65rem 0.75rem;
+    margin-bottom: 0.5rem;
+    background: var(--color-surface);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  :global(.evidence-card.highlight) {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-accent);
+  }
+  :global(.evidence-meta) {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    margin-bottom: 0.35rem;
+  }
+  :global(.evidence-rank) {
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+  :global(.evidence-score) {
+    color: var(--color-muted);
+  }
+  :global(.evidence-section) {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.35rem;
+  }
+  :global(.evidence-excerpt) {
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  :global(.answer-text) {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    color: var(--color-text);
+  }
+  .demo-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    font-size: 0.75rem;
+    color: var(--color-muted);
+  }
+  .demo-footer a {
+    font-weight: 600;
+  }
+  @media (max-width: 768px) {
+    .demo-panels {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

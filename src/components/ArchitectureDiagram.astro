@@ -1,0 +1,37 @@
+---
+interface Props {
+  caption?: string;
+}
+const { caption } = Astro.props;
+---
+
+<figure class="arch-figure">
+  <pre class="arch-block">
+  Client (Cursor MCP / HTTP / CLI)
+              │
+              ▼
+    ┌─────────────────┐
+    │   rag-router    │  :8090
+    │  route + proxy  │
+    └────────┬────────┘
+             │  classifies intent
+      ┌──────┴──────┐──────────────┐
+      ▼             ▼              ▼
+ rag-agent      rag-agent      rag-agent
+  :8081           :8082          :8083
+  legal           wiki          security</pre>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .arch-figure {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  figcaption {
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+    text-align: center;
+  }
+</style>

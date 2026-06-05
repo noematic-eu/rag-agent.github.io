@@ -1,0 +1,97 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import FeatureList from '../../../components/FeatureList.astro';
+import RagDemo from '../../../components/RagDemo.astro';
+import { t } from '../../../i18n/utils';
+
+const locale = 'fr';
+const base = import.meta.env.BASE_URL;
+const prefix = `${base}fr/`;
+
+const features = [
+  t(locale, 'agent_f1'), t(locale, 'agent_f2'), t(locale, 'agent_f3'), t(locale, 'agent_f4'),
+  t(locale, 'agent_f5'), t(locale, 'agent_f6'), t(locale, 'agent_f7'), t(locale, 'agent_f8'),
+];
+const usecases = [t(locale, 'agent_uc1'), t(locale, 'agent_uc2'), t(locale, 'agent_uc3')];
+const buyers = [t(locale, 'agent_b1'), t(locale, 'agent_b2'), t(locale, 'agent_b3')];
+---
+
+<BaseLayout locale={locale} title={t(locale, 'agent_title')} description={t(locale, 'agent_intro')}>
+  <section class="page-hero">
+    <div class="container">
+      <span class="pill">Moteur</span>
+      <h1>{t(locale, 'agent_title')}</h1>
+      <p class="page-tagline">{t(locale, 'agent_tagline')}</p>
+      <p class="page-intro">{t(locale, 'agent_intro')}</p>
+      <div class="page-hero-actions">
+        <a href={`${prefix}contact`} class="btn btn-primary">{t(locale, 'agent_cta')}</a>
+        <a href={`${prefix}pricing`} class="btn btn-outline">{t(locale, 'nav_pricing')}</a>
+      </div>
+    </div>
+  </section>
+
+  <RagDemo locale={locale} />
+
+  <section>
+    <div class="container two-col">
+      <div>
+        <p class="section-label">{t(locale, 'agent_features_title')}</p>
+        <FeatureList items={features} />
+      </div>
+      <div>
+        <div class="card benchmark-card">
+          <p class="section-label">{t(locale, 'agent_benchmark_title')}</p>
+          <div class="bench-stats">
+            <div class="bench-stat"><span class="bench-value">1,000</span><span class="bench-label">Recall@8</span></div>
+            <div class="bench-stat"><span class="bench-value">0,875</span><span class="bench-label">MRR</span></div>
+          </div>
+          <p style="font-size:0.8125rem">{t(locale, 'agent_benchmark_body')}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt-bg">
+    <div class="container two-col">
+      <div>
+        <p class="section-label">{t(locale, 'agent_usecases_title')}</p>
+        <FeatureList items={usecases} />
+      </div>
+      <div>
+        <p class="section-label">{t(locale, 'agent_buyers_title')}</p>
+        <FeatureList items={buyers} />
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="container cta-band-inner">
+      <div>
+        <h2>{t(locale, 'pricing_tier_pilot_name')}</h2>
+        <p>{t(locale, 'pricing_tier_pilot_note')}</p>
+      </div>
+      <a href={`${prefix}contact`} class="btn btn-primary">{t(locale, 'agent_cta')}</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-hero { padding-block: 80px 64px; border-bottom: 1px solid var(--color-border); }
+  .page-hero .container { display: flex; flex-direction: column; gap: 1rem; max-width: 680px; }
+  .page-hero h1 { margin-top: 0.25rem; }
+  .page-tagline { font-size: 1rem; color: var(--color-accent); font-weight: 600; }
+  .page-intro { font-size: 1.0625rem; max-width: 56ch; }
+  .page-hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.25rem; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+  .alt-bg { background: var(--color-surface); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+  .benchmark-card { display: flex; flex-direction: column; gap: 1rem; }
+  .bench-stats { display: flex; gap: 2rem; }
+  .bench-stat { display: flex; flex-direction: column; }
+  .bench-value { font-size: 2rem; font-weight: 700; color: var(--color-accent); line-height: 1; }
+  .bench-label { font-size: 0.75rem; color: var(--color-muted); margin-top: 0.2rem; }
+  .cta-band { border-top: 1px solid var(--color-border); background: var(--color-surface); padding-block: 64px; }
+  .cta-band-inner { display: flex; align-items: center; justify-content: space-between; gap: 2rem; flex-wrap: wrap; }
+  .cta-band h2 { font-size: 1.5rem; }
+  .cta-band p { color: var(--color-muted); font-size: 0.9375rem; margin-top: 0.25rem; }
+  @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; gap: 2.5rem; } }
+</style>

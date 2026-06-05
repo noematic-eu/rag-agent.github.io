@@ -1,20 +1,19 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Hero from '../components/Hero.astro';
-import Pillars from '../components/Pillars.astro';
-import ProductCard from '../components/ProductCard.astro';
-import { t } from '../i18n/utils';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../../components/Hero.astro';
+import Pillars from '../../components/Pillars.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { t } from '../../i18n/utils';
 
-const locale = 'en';
+const locale = 'fr';
 const base = import.meta.env.BASE_URL;
+const prefix = `${base}fr/`;
 ---
 
-<BaseLayout locale={locale} title="Private RAG Infrastructure">
+<BaseLayout locale={locale} title="Infrastructure RAG Privée">
   <Hero locale={locale} />
-
   <Pillars locale={locale} />
 
-  <!-- Products section -->
   <section>
     <div class="container">
       <p class="section-label">{t(locale, 'products_title')}</p>
@@ -23,62 +22,49 @@ const base = import.meta.env.BASE_URL;
           title={t(locale, 'product_agent_title')}
           description={t(locale, 'product_agent_desc')}
           cta={t(locale, 'product_agent_cta')}
-          href={`${base}products/rag-agent`}
-          badge="Engine"
+          href={`${prefix}products/rag-agent`}
+          badge="Moteur"
         />
         <ProductCard
           title={t(locale, 'product_router_title')}
           description={t(locale, 'product_router_desc')}
           cta={t(locale, 'product_router_cta')}
-          href={`${base}products/rag-router`}
+          href={`${prefix}products/rag-router`}
           badge="Orchestration"
         />
       </div>
     </div>
   </section>
 
-  <!-- Bottom CTA -->
   <section class="cta-band">
     <div class="container cta-band-inner">
       <div class="cta-block">
         <h2>{t(locale, 'home_support_title')}</h2>
         <p>{t(locale, 'home_support_body')}</p>
-        <a href={`${base}pricing#supporter`} class="btn btn-primary">{t(locale, 'home_support_cta')}</a>
+        <a href={`${prefix}pricing#supporter`} class="btn btn-primary">{t(locale, 'home_support_cta')}</a>
       </div>
       <div class="cta-divider" aria-hidden="true"></div>
       <div class="cta-block">
         <h2>{t(locale, 'home_pilot_title')}</h2>
         <p>{t(locale, 'home_pilot_body')}</p>
-        <a href={`${base}contact`} class="btn btn-outline">{t(locale, 'home_pilot_cta')}</a>
+        <a href={`${prefix}contact`} class="btn btn-outline">{t(locale, 'home_pilot_cta')}</a>
       </div>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .cta-band {
-    border-top: 1px solid var(--color-border);
-    background: var(--color-surface);
-    padding-block: 64px;
-  }
+  .cta-band { border-top: 1px solid var(--color-border); background: var(--color-surface); padding-block: 64px; }
   .cta-band-inner {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     gap: 2.5rem;
     align-items: start;
   }
-  .cta-block {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
+  .cta-block { display: flex; flex-direction: column; gap: 0.75rem; }
   .cta-block h2 { font-size: 1.5rem; }
   .cta-block p { color: var(--color-muted); font-size: 0.9375rem; }
-  .cta-divider {
-    width: 1px;
-    background: var(--color-border);
-    align-self: stretch;
-  }
+  .cta-divider { width: 1px; background: var(--color-border); align-self: stretch; }
   @media (max-width: 768px) {
     .cta-band-inner { grid-template-columns: 1fr; }
     .cta-divider { display: none; }
