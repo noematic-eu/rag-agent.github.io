@@ -10,10 +10,15 @@ export const RAG_AGENT_URL = (import.meta.env.PUBLIC_RAG_AGENT_URL ?? '')
   .replace(/\/$/, '');
 
 /** Payhip checkout for monthly supporter subscription (empty = fallback to contact). */
-export const CHECKOUT_SUPPORTER_URL = (import.meta.env.PUBLIC_CHECKOUT_SUPPORTER_URL ?? '').trim();
+export const CHECKOUT_SUPPORTER_URL = (
+  import.meta.env.PUBLIC_CHECKOUT_SUPPORTER_URL ?? 'https://payhip.com/b/Wj5Rl'
+).trim();
 
 /** Lemon Squeezy checkout for pay-what-you-want contributions (empty = fallback to contact). */
-export const CHECKOUT_DONATION_URL = (import.meta.env.PUBLIC_CHECKOUT_DONATION_URL ?? '').trim();
+export const CHECKOUT_DONATION_URL = (
+  import.meta.env.PUBLIC_CHECKOUT_DONATION_URL ??
+    'https://store.noematic.eu/checkout/buy/736733f7-41f5-42fe-adee-8560101545ab'
+).trim();
 
 /** PayPal donate link (empty = hidden secondary CTA). */
 export const CHECKOUT_DONATION_PAYPAL_URL = (import.meta.env.PUBLIC_CHECKOUT_DONATION_PAYPAL_URL ?? '').trim();
