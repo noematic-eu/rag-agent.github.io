@@ -86,6 +86,7 @@ const en = {
   demo_stats_link: 'Agent stats',
   demo_score: 'Score',
   demo_top_k: 'Number of excerpts',
+  demo_think_label: 'Reasoning',
 
   // rag-router page
   router_title: 'rag-router',

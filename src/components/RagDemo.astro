@@ -23,6 +23,7 @@ const i18n = {
   poweredBy: t(locale, 'demo_powered_by'),
   statsLink: t(locale, 'demo_stats_link'),
   score: t(locale, 'demo_score'),
+  thinkLabel: t(locale, 'demo_think_label'),
 };
 ---
 
@@ -116,6 +117,10 @@ const i18n = {
     let activeCorpus = defaultCorp;
     let eventSource = null;
     let busy = false;
+    let thinkAutoClosed = false;
+
+    const THINK_OPEN = /<(think|redacted_thinking)>/i;
+    const THINK_CLOSE = /<\/(think|redacted_thinking)>/i;
 
     const questionInput = document.getElementById('demo-question');
     const askBtn = document.getElementById('demo-ask');
@@ -211,6 +216,81 @@ const i18n = {
         .join('');
     }
 
+    function splitThinkAndAnswer(text) {
+      const openMatch = text.match(THINK_OPEN);
+      if (!openMatch) {
+        return { think: '', answer: text, thinkComplete: true, hasThink: false };
+      }
+
+      const afterOpen = text.slice(openMatch.index + openMatch[0].length);
+      const closeMatch = afterOpen.match(THINK_CLOSE);
+
+      if (!closeMatch) {
+        return { think: afterOpen, answer: '', thinkComplete: false, hasThink: true };
+      }
+
+      const think = afterOpen.slice(0, closeMatch.index);
+      const answer = afterOpen.slice(closeMatch.index + closeMatch[0].length).trimStart();
+      return { think, answer, thinkComplete: true, hasThink: true };
+    }
+
+    function formatInlineMarkdown(text) {
+      return text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>');
+    }
+
+    function formatAnswerMarkdown(text) {
+      if (!text) return '';
+
+      const escaped = escapeHtml(text);
+      const blocks = escaped.split(/\n\n+/).filter((block) => block.length > 0);
+      const parts = [];
+
+      for (const block of blocks) {
+        const lines = block.split('\n');
+        const isList = lines.length > 0 && lines.every((line) => /^[-*]\s+/.test(line));
+
+        if (isList) {
+          const items = lines
+            .map((line) => {
+              const content = line.replace(/^[-*]\s+/, '');
+              return `<li>${formatInlineMarkdown(content)}</li>`;
+            })
+            .join('');
+          parts.push(`<ul>${items}</ul>`);
+        } else {
+          const joined = lines.join('<br>');
+          parts.push(`<p>${formatInlineMarkdown(joined)}</p>`);
+        }
+      }
+
+      return parts.join('');
+    }
+
+    function bindThinkToggle(details) {
+      if (details.dataset.bound === 'true') return;
+      details.dataset.bound = 'true';
+      details.addEventListener('toggle', () => {
+        details.dataset.userOpen = details.open ? 'true' : 'false';
+      });
+    }
+
+    function setThinkOpen(details, { thinkComplete, prevUserOpen }) {
+      if (prevUserOpen === 'true') {
+        details.open = true;
+      } else if (prevUserOpen === 'false') {
+        details.open = false;
+      } else if (!thinkComplete) {
+        details.open = true;
+      } else if (!thinkAutoClosed) {
+        details.open = false;
+        thinkAutoClosed = true;
+      } else {
+        details.open = false;
+      }
+    }
+
     function highlightCitations(answerText) {
       const cards = evidenceEl.querySelectorAll('.evidence-card');
       cards.forEach((c) => c.classList.remove('highlight'));
@@ -227,8 +307,44 @@ const i18n = {
         answerEl.innerHTML = `<p class="panel-empty">${streaming ? escapeHtml(i18n.loadingAnswer) : ''}</p>`;
         return;
       }
-      answerEl.innerHTML = `<div class="answer-text">${escapeHtml(text)}</div>`;
-      highlightCitations(text);
+
+      const prevDetails = answerEl.querySelector('.answer-think');
+      const prevUserOpen = prevDetails?.dataset.userOpen;
+
+      const { think, answer, thinkComplete, hasThink } = splitThinkAndAnswer(text);
+      const parts = [];
+
+      if (hasThink) {
+        parts.push(`
+          <details class="answer-think">
+            <summary>${escapeHtml(i18n.thinkLabel)}</summary>
+            <div class="answer-think-body">${escapeHtml(think)}</div>
+          </details>
+        `);
+      }
+
+      if (answer) {
+        parts.push(`<div class="answer-content">${formatAnswerMarkdown(answer)}</div>`);
+      } else if (streaming && thinkComplete) {
+        parts.push(`<p class="panel-empty">${escapeHtml(i18n.loadingAnswer)}</p>`);
+      } else if (!hasThink) {
+        parts.push(`<div class="answer-content">${formatAnswerMarkdown(text)}</div>`);
+      }
+
+      if (parts.length === 0) {
+        answerEl.innerHTML = `<p class="panel-empty">${streaming ? escapeHtml(i18n.loadingAnswer) : ''}</p>`;
+      } else {
+        answerEl.innerHTML = parts.join('');
+      }
+
+      const details = answerEl.querySelector('.answer-think');
+      if (details) {
+        if (prevUserOpen) details.dataset.userOpen = prevUserOpen;
+        setThinkOpen(details, { thinkComplete, prevUserOpen });
+        bindThinkToggle(details);
+      }
+
+      highlightCitations(answer || text);
     }
 
     function closeStream() {
@@ -265,6 +381,7 @@ const i18n = {
     function streamAnswer(rq, q) {
       return new Promise((resolve, reject) => {
         closeStream();
+        thinkAutoClosed = false;
         renderAnswer('', true);
 
         const topK = String(currentTopK());
@@ -336,6 +453,7 @@ const i18n = {
       if (busy) return;
       setBusy(true);
       closeStream();
+      thinkAutoClosed = false;
       answerEl.innerHTML = `<p class="panel-loading">${escapeHtml(i18n.loadingAnswer)}</p>`;
 
       try {
@@ -556,11 +674,67 @@ const i18n = {
     line-height: 1.5;
     white-space: pre-wrap;
   }
-  :global(.answer-text) {
-    font-size: 0.9375rem;
-    line-height: 1.6;
+  :global(.answer-think) {
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    overflow: hidden;
+  }
+  :global(.answer-think summary) {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  :global(.answer-think summary::-webkit-details-marker) {
+    display: none;
+  }
+  :global(.answer-think summary::before) {
+    content: '▸';
+    display: inline-block;
+    margin-right: 0.4rem;
+    transition: transform 0.15s;
+  }
+  :global(.answer-think[open] summary::before) {
+    transform: rotate(90deg);
+  }
+  :global(.answer-think-body) {
+    padding: 0 0.75rem 0.65rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: var(--color-muted);
     white-space: pre-wrap;
+    border-top: 1px solid var(--color-border);
+  }
+  :global(.answer-content) {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--color-muted);
+    max-width: 60ch;
+  }
+  :global(.answer-content p) {
+    margin-bottom: 0.75rem;
+  }
+  :global(.answer-content p:last-child) {
+    margin-bottom: 0;
+  }
+  :global(.answer-content ul) {
+    margin: 0 0 0.75rem 1.25rem;
+    padding: 0;
+  }
+  :global(.answer-content li) {
+    margin-bottom: 0.35rem;
+  }
+  :global(.answer-content li:last-child) {
+    margin-bottom: 0;
+  }
+  :global(.answer-content strong) {
     color: var(--color-text);
+    font-weight: 600;
   }
   .demo-footer {
     display: flex;

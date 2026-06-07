@@ -24,7 +24,7 @@ export const DEMO_SUGGESTIONS: Record<
   'legal-demo': {
     fr: [
       {
-        rq: 'article 1 republique',
+        rq: 'article premier republique indivisible laicite democratique sociale',
         q: "En 3 points, que dit l'article 1 sur la République ?",
         label: 'Article 1',
       },
@@ -41,7 +41,7 @@ export const DEMO_SUGGESTIONS: Record<
     ],
     en: [
       {
-        rq: 'article 1 republique',
+        rq: 'article premier republique indivisible laicite democratique sociale',
         q: 'What does Article 1 say about the Republic? Summarize in 3 points.',
         label: 'Article 1',
       },
