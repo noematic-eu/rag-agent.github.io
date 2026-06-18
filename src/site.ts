@@ -4,8 +4,10 @@ export const GITHUB_ROUTER = 'https://github.com/noematic-eu/rag-router';
 export const SITE_NAME = 'Noematic';
 export const SITE_URL = 'https://rag.noematic.eu/';
 
-/** Live demo agent base URL (empty = demo hidden). Set via PUBLIC_RAG_AGENT_URL at build time. */
-export const RAG_AGENT_URL = (import.meta.env.PUBLIC_RAG_AGENT_URL ?? '')
+/** Live demo agent base URL (empty = demo hidden). Override via PUBLIC_RAG_AGENT_URL at build time. */
+export const RAG_AGENT_URL = (
+  import.meta.env.PUBLIC_RAG_AGENT_URL ?? 'https://rag-agent.noematic.eu'
+)
   .trim()
   .replace(/\/$/, '');
 
